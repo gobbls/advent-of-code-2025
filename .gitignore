@@ -2,3 +2,4 @@
 *bin
 *input.txt
 !test-input.txt
+!template/input.txt
