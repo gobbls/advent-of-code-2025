@@ -11,27 +11,66 @@ public class Solution {
 	private const char S = 'S';
 
 	public Solution(bool? isTest) {
-		Input = ReadInput.GetInput(isTest: isTest);
+		string[] _input = ReadInput.GetInput(isTest: isTest);
+
+		// filter await gap-lines
+		Input = _input.Distinct().ToArray();
+
 		run();
 	}
 
 	private void run() {
-		void traverse(int x, int y) {
-			//Console.WriteLine($"[DEBUG] x = {x} y = {y}, Output = {Output}\r");
+		Queue<(int y, int x)> q = new Queue<(int y, int x)>();
 
-			if (y == Input.Length - 1) {
-				Output++;
-				return;
+ 		// append the start of the Input
+		q.Enqueue((0, Input[0].IndexOf(S)));
+
+		var beams = new Dictionary<(int y, int x), long>() {
+			[(0, Input[0].IndexOf(S))] = 1
+		};
+
+		void EnqueueBeam((int, int) p, long paths) {
+			if (!beams.ContainsKey(p)) {
+				beams[p] = paths;
 			} else {
-				if (Input[y][x] == C) {
-					traverse(x - 1, y + 1);
-					traverse(x + 1, y + 1);
-				} else {
-					traverse(x, y + 1);
-				}
+				beams[p] += paths;
+			}
+
+			if (!q.Contains(p)) {
+				q.Enqueue(p);
 			}
 		}
 
-		traverse(Input[0].IndexOf(S), 1);
+		while (q.Count > 0) {
+			var beam = q.Dequeue(); 
+			var paths = beams[beam];
+			beams.Remove(beam);
+			var (y, x) = beam;
+			int by = y + 1;
+
+			if (by >= Input.Length) {
+				Output += paths;
+				continue;
+			}
+
+			switch (Input[by][x]) {
+				case '.':
+					EnqueueBeam((by, x), paths);
+					break;
+				case '^':
+					int left = x - 1;
+					int right = x + 1;
+
+					if (left >= 0 && Input[by][left] == '.') {
+						EnqueueBeam((by, left), paths);
+					}
+
+					if (right < Input[0].Length && Input[by][right] == '.') {
+						EnqueueBeam((by, right), paths);
+					}
+
+					break;
+			}
+		}
 	}
 }
